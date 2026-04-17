@@ -18,7 +18,7 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import EnvironmentVariable, LaunchConfiguration
 from launch_ros.actions import Node
@@ -43,8 +43,9 @@ def generate_launch_description():
     }
 
     cartographer_config_dir    = os.path.join(cartographer_pkg, 'config')
-    configuration_basename     = 'turtlebot3_lds_2d.lua'
+    configuration_basename     = 'turtlebot3_lds_2d_exploration.lua'
     nav2_params_file           = os.path.join(gazebo_pkg, 'params', 'nav2_exploration_waffle.yaml')
+    explore_params_file        = os.path.join(gazebo_pkg, 'params', 'explore_lite_params.yaml')
     rviz_config                = os.path.join(cartographer_pkg, 'rviz', 'tb3_cartographer.rviz')
 
     # ── GZ_SIM_RESOURCE_PATH ──
@@ -122,26 +123,23 @@ def generate_launch_description():
         }.items())
 
     # ── explore_lite frontier exploration ──
-    # Reads /global_costmap/costmap, sends NavigateToPose goals to Nav2
+    # Uses raw /map from Cartographer (not Nav2 costmap) — works immediately on startup.
+    # Config mirrors the reference VLM-nav repo params exactly.
     explore_node = Node(
         package='explore_lite',
         executable='explore',
-        name='explore',
+        name='explore_node',
         output='screen',
-        parameters=[{
-            'use_sim_time':            True,
-            'robot_base_frame':        'base_footprint',
-            'costmap_topic':           '/global_costmap/costmap',
-            'costmap_updates_topic':   '/global_costmap/costmap_updates',
-            'visualize':               True,
-            'planner_frequency':       0.33,    # Hz — how often to re-evaluate frontier
-            'progress_timeout':        30.0,    # s  — abandon goal if no progress
-            'potential_scale':         3.0,
-            'orientation_scale':       0.0,
-            'gain_scale':              1.0,
-            'transform_tolerance':     0.3,
-            'min_frontier_size':       0.75,    # m  — ignore tiny frontier blobs
-        }])
+        parameters=[explore_params_file, {'use_sim_time': use_sim_time}],
+        remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')])
+
+    # ── VLM semantic detection (runs in background during exploration) ──
+    # Detects rooms/objects from camera, stores locations in ~/dl_hackathon/semantic_map.json
+    vlm_node = Node(
+        package='vlm_nav',
+        executable='vlm_detection',
+        name='vlm_detection',
+        output='screen')
 
     # ── RViz2 ──
     rviz_node = Node(
@@ -170,7 +168,10 @@ def generate_launch_description():
     ld.add_action(cartographer_node)
     ld.add_action(occupancy_grid_node)
     ld.add_action(nav2_navigation)
-    ld.add_action(explore_node)
+    # Delay explore_lite: Nav2 global costmap needs ~15s to activate and populate
+    # free cells around robot before explore_lite BFS can find a starting cell
+    ld.add_action(TimerAction(period=25.0, actions=[explore_node]))
+    ld.add_action(vlm_node)
 
     if use_rviz:
         ld.add_action(rviz_node)

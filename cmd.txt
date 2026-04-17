@@ -63,3 +63,57 @@ ros2 run turtlebot3_drl train_agent td3
   pkill -9 -f "gz sim"; pkill -9 ruby; sleep 2                                                                                                                                                              
   ./scripts/1_launch_sim.sh 4                                                                                                                                                                               
                                  
+
+
+
+
+Build and test:                                                                                                                                                                                           
+                                                                                                                                                                                                            
+  colcon build --packages-select vlm_nav --symlink-install                                                                                                                                                  
+  source install/setup.bash                                                                                                                                                                                 
+                                                                                                                                                                                                            
+  Full pipeline:                                                                                                                                                                                            
+                                                                                                                                                                                                            
+  Phase 1 — Explore + build semantic map (single launch):                                                                                                                                                   
+  export CYCLONEDDS_URI=file://$HOME/dl_hackathon/cyclonedds.xml                                                                                                                                            
+  export TURTLEBOT3_MODEL=waffle                                                                                                                                                                            
+  ros2 launch turtlebot3_gazebo gz_frontier_exploration.launch.py                                                                                                                                           
+  Robot explores autonomously. VLM detects rooms/objects live. Saves to ~/dl_hackathon/semantic_map.json.                                                                                                   
+                                                                                                                                                                                                            
+  Phase 2 — Go anywhere by name:                                                                                                                                                                            
+  # Interactive                                                                                                                                                                                             
+  ros2 run vlm_nav semantic_nav                                                                                                                                                                             
+                                                                                                                                                                                                            
+  # Single shot                                                                                                                                                                                           
+  ros2 run vlm_nav semantic_nav "kitchen"                                                                                                                                                                   
+  ros2 run vlm_nav semantic_nav "washroom"
+                                                                                                                                                                                                            
+  How it works:                                                                                                                                                                                           
+
+  Exploration phase:                                                                                                                                                                                        
+    camera/image_raw → Faster R-CNN boxes → CLIP cosine sim vs labels
+    robot map pose stored when label seen → semantic_map.json                                                                                                                                               
+                                                                                                                                                                                                            
+  Navigation phase:                                                                                                                                                                                         
+    "go to kitchen" → CLIP text encode → cosine sim vs JSON keys                                                                                                                                            
+    → best match → NavigateToPose(x, y) → Nav2 drives there                                                                                                                                                 
+                                                                                                                                                                                                            
+  JSON looks like:                                                                                                                                                                                          
+  {                                                                                                                                                                                                         
+    "kitchen": { "score": 0.31, "position": {"x": 1.2, "y": -0.8, "z": 0.0} },                                                                                                                            
+    "sofa":    { "score": 0.28, "position": {"x": -2.1, "y": 0.5, "z": 0.0} } 
+  }                                                                                                                                                                                                         
+                                                                             
+
+
+  pkill -9 -f "gz sim"; pkill -9 ruby; sleep 2
+  export CYCLONEDDS_URI=file://$HOME/dl_hackathon/cyclonedds.xml
+  export TURTLEBOT3_MODEL=waffle
+  ros2 launch turtlebot3_gazebo gz_frontier_exploration.launch.py
+
+
+export CYCLONEDDS_URI=file://$HOME/dl_hackathon/cyclonedds.xml                                                                                                                                            
+  export TURTLEBOT3_MODEL=waffle                                                                                                                                                                            
+  ros2 launch turtlebot3_gazebo gz_frontier_exploration.launch.py
+
+

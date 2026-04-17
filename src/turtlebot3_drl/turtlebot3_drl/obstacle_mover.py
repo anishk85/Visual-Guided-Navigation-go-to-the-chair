@@ -13,10 +13,9 @@ Usage:
 
 import time
 import math
+import subprocess
 import rclpy
 from rclpy.node import Node
-from ros_gz_interfaces.srv import SetEntityPose
-from ros_gz_interfaces.msg import Entity
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
 
@@ -196,10 +195,6 @@ class ObstacleMover(Node):
             self.get_logger().info('No obstacles for this stage, node idle.')
             return
 
-        # SetEntityPose client
-        self.set_pose_client = self.create_client(
-            SetEntityPose, '/world/default/set_pose')
-
         # Publish obstacle odom for the DRL environment (single topic, child_frame_id identifies obstacle)
         self.obstacle_odom_pub = self.create_publisher(Odometry, 'obstacle/odom', 10)
 
@@ -231,18 +226,18 @@ class ObstacleMover(Node):
             self._publish_odom(obs_id, world_x, world_y)
 
     def _set_obstacle_pose(self, name, x, y):
-        if not self.set_pose_client.service_is_ready():
-            return
-
-        req = SetEntityPose.Request()
-        req.entity = Entity()
-        req.entity.name = name
-        req.entity.type = Entity.MODEL
-        req.pose = Pose()
-        req.pose.position.x = x
-        req.pose.position.y = y
-        req.pose.position.z = 0.0
-        self.set_pose_client.call_async(req)
+        """Move obstacle via gz service CLI (Gz Transport, not ROS)"""
+        try:
+            subprocess.run(
+                ['gz', 'service', '-s', '/world/default/set_pose',
+                 '--reqtype', 'gz.msgs.Pose',
+                 '--reptype', 'gz.msgs.Boolean',
+                 '--timeout', '100',
+                 '--req', f'name: "{name}", position: {{x: {x}, y: {y}, z: 0.0}}'],
+                capture_output=True, timeout=1
+            )
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pass
 
     def _publish_odom(self, obs_id, x, y):
         msg = Odometry()
