@@ -124,7 +124,7 @@ def generate_launch_description():
     # ── explore_lite frontier exploration ──
     # Reads /global_costmap/costmap, sends NavigateToPose goals to Nav2
     explore_node = Node(
-        package='explore',
+        package='explore_lite',
         executable='explore',
         name='explore',
         output='screen',

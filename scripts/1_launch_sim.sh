@@ -14,6 +14,7 @@ source /opt/ros/humble/setup.bash
 source ~/dl_hackathon/install/setup.bash
 export TURTLEBOT3_MODEL=waffle
 export DRLNAV_BASE_PATH=~/dl_hackathon
+export CYCLONEDDS_URI=file://$HOME/dl_hackathon/cyclonedds.xml
 
 STAGE=${1:-4}
 
