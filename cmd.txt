@@ -59,3 +59,7 @@ ros2 run turtlebot3_drl train_agent td3
 4️⃣  Test on any stage:
     Terminal 4: ros2 run turtlebot3_drl test_agent td3 "td3_0" 8000
 
+  export CYCLONEDDS_URI=file://$HOME/dl_hackathon/cyclonedds.xml                                                                                                                                            
+  pkill -9 -f "gz sim"; pkill -9 ruby; sleep 2                                                                                                                                                              
+  ./scripts/1_launch_sim.sh 4                                                                                                                                                                               
+                                 
