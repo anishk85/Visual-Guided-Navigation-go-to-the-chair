@@ -30,8 +30,8 @@ def generate_launch_description():
         output='screen',
         parameters=[{
             'dev': LaunchConfiguration('joy_dev'),
-            'deadzone': 0.1,
-            'autorepeat_rate': 30.0,
+            'deadzone': 0.08,
+            'autorepeat_rate': 50.0,
         }],
     )
 
@@ -51,6 +51,11 @@ def generate_launch_description():
             'button_angular_down': 0,
             'button_stop': 6,
             'button_enable': -1,
+            'publish_rate': 30.0,
+            'axis_deadzone': 0.08,
+            'axis_expo': 1.6,
+            'linear_accel_limit': 0.8,
+            'angular_accel_limit': 1.8,
         }],
     )
 

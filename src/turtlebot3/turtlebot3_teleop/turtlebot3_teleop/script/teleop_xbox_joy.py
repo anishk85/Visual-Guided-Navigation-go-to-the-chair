@@ -42,6 +42,7 @@ class XboxJoyTeleop(Node):
         self.declare_parameter('linear_axis', 1)
         self.declare_parameter('angular_axis', 3)
         self.declare_parameter('axis_deadzone', 0.1)
+        self.declare_parameter('axis_expo', 1.6)
         self.declare_parameter('linear_axis_scale', 1.0)
         self.declare_parameter('angular_axis_scale', 1.0)
 
@@ -57,8 +58,8 @@ class XboxJoyTeleop(Node):
         self.declare_parameter('initial_linear_limit', default_linear_limit)
         self.declare_parameter('initial_angular_limit', default_angular_limit)
 
-        self.declare_parameter('linear_accel_step', 0.1)
-        self.declare_parameter('angular_accel_step', 0.2)
+        self.declare_parameter('linear_accel_limit', 0.8)   # m/s^2
+        self.declare_parameter('angular_accel_limit', 1.8)  # rad/s^2
 
         self.cmd_vel_topic = self.get_parameter('cmd_vel_topic').value
         joy_topic = self.get_parameter('joy_topic').value
@@ -68,6 +69,7 @@ class XboxJoyTeleop(Node):
         self.linear_axis = int(self.get_parameter('linear_axis').value)
         self.angular_axis = int(self.get_parameter('angular_axis').value)
         self.axis_deadzone = float(self.get_parameter('axis_deadzone').value)
+        self.axis_expo = max(1.0, float(self.get_parameter('axis_expo').value))
         self.linear_axis_scale = float(self.get_parameter('linear_axis_scale').value)
         self.angular_axis_scale = float(self.get_parameter('angular_axis_scale').value)
 
@@ -86,8 +88,8 @@ class XboxJoyTeleop(Node):
         self.current_linear_limit = self._clamp(initial_linear_limit, 0.0, self.max_linear_limit)
         self.current_angular_limit = self._clamp(initial_angular_limit, 0.0, self.max_angular_limit)
 
-        self.linear_accel_step = float(self.get_parameter('linear_accel_step').value)
-        self.angular_accel_step = float(self.get_parameter('angular_accel_step').value)
+        self.linear_accel_limit = max(0.01, float(self.get_parameter('linear_accel_limit').value))
+        self.angular_accel_limit = max(0.01, float(self.get_parameter('angular_accel_limit').value))
 
         self.target_linear_velocity = 0.0
         self.target_angular_velocity = 0.0
@@ -127,6 +129,11 @@ class XboxJoyTeleop(Node):
         if abs(value) < deadzone:
             return 0.0
         return value
+
+    @staticmethod
+    def _shape_axis(value, expo):
+        # expo > 1.0 gives finer low-speed control around center stick.
+        return (abs(value) ** expo) * (1.0 if value >= 0.0 else -1.0)
 
     @staticmethod
     def _make_simple_profile(output_vel, input_vel, step):
@@ -208,6 +215,9 @@ class XboxJoyTeleop(Node):
         linear_axis_value = self._apply_deadzone(linear_axis_value, self.axis_deadzone)
         angular_axis_value = self._apply_deadzone(angular_axis_value, self.axis_deadzone)
 
+        linear_axis_value = self._shape_axis(linear_axis_value, self.axis_expo)
+        angular_axis_value = self._shape_axis(angular_axis_value, self.axis_expo)
+
         self.target_linear_velocity = (
             linear_axis_value * self.linear_axis_scale * self.current_linear_limit
         )
@@ -223,15 +233,18 @@ class XboxJoyTeleop(Node):
             self.target_linear_velocity = 0.0
             self.target_angular_velocity = 0.0
 
+        linear_step = self.linear_accel_limit / self.publish_rate
+        angular_step = self.angular_accel_limit / self.publish_rate
+
         self.control_linear_velocity = self._make_simple_profile(
             self.control_linear_velocity,
             self.target_linear_velocity,
-            self.linear_accel_step,
+            linear_step,
         )
         self.control_angular_velocity = self._make_simple_profile(
             self.control_angular_velocity,
             self.target_angular_velocity,
-            self.angular_accel_step,
+            angular_step,
         )
 
         if self.ros_distro == 'humble':
