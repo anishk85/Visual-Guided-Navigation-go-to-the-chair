@@ -17,3 +17,45 @@ ros2 launch aws_robomaker_small_house_world small_house.launch.py gui:=true
 
 
 ros2 launch aws_robomaker_small_house_world small_house.launch.py gui:=false
+
+
+
+cd ~/dl_hackathon
+source install/setup.bash
+export TURTLEBOT3_MODEL=waffle
+export DRLNAV_BASE_PATH=~/dl_hackathon
+ros2 launch turtlebot3_gazebo gz_drl_stage.launch.py stage:=4
+
+cd ~/dl_hackathon
+source install/setup.bash
+export DRLNAV_BASE_PATH=~/dl_hackathon
+export TURTLEBOT3_MODEL=waffle
+ros2 run turtlebot3_drl gazebo_goals
+
+
+cd ~/dl_hackathon
+source install/setup.bash
+ros2 run turtlebot3_drl environment
+
+
+cd ~/dl_hackathon
+source install/setup.bash
+ros2 run turtlebot3_drl train_agent td3
+
+
+1️⃣  Train Stage 4 for ~8000 episodes
+    (just run the commands above)
+
+2️⃣  Stop training (Ctrl+C in Terminal 4)
+    Stop sim (Ctrl+C in Terminal 1)
+
+3️⃣  Resume on Stage 9 (hard mode):
+    Terminal 1: ros2 launch turtlebot3_gazebo gz_drl_stage.launch.py stage:=9
+    Terminal 2: ros2 run turtlebot3_drl gazebo_goals  (same command)
+    Terminal 3: ros2 run turtlebot3_drl environment   (same command)
+    Terminal 4: ros2 run turtlebot3_drl train_agent td3 "td3_0" 8000
+                                                       ↑model  ↑episode to resume from
+
+4️⃣  Test on any stage:
+    Terminal 4: ros2 run turtlebot3_drl test_agent td3 "td3_0" 8000
+

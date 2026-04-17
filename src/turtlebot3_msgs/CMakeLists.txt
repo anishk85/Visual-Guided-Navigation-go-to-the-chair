@@ -38,6 +38,8 @@ set(srv_files
   "srv/Sound.srv"
   "srv/Dqn.srv"
   "srv/Goal.srv"
+  "srv/DrlStep.srv"
+  "srv/RingGoal.srv"
 )
 
 set(action_files
