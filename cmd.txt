@@ -1,0 +1,19 @@
+source ~/dl_hackathon/install/setup.bash
+export TURTLEBOT3_MODEL=waffle
+ros2 launch turtlebot3_gazebo gz_cartographer.launch.py
+
+
+ros2 run turtlebot3_teleop teleop_keyboard
+
+
+ros2 run nav2_map_server map_saver_cli -f ~/dl_hackathon/maps/tb3_world
+
+ros2 launch turtlebot3_gazebo gz_navigation.launch.py map:=$HOME/dl_hackathon/maps/tb3_world.yaml
+
+
+cd /home/anish/dl_hackathon
+source install/setup.bash
+ros2 launch aws_robomaker_small_house_world small_house.launch.py gui:=true
+
+
+ros2 launch aws_robomaker_small_house_world small_house.launch.py gui:=false
