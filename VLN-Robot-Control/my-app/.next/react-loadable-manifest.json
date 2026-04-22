@@ -1,0 +1,24 @@
+{
+  "hooks/use-vln-pipeline.ts -> roslib": {
+    "id": "hooks/use-vln-pipeline.ts -> roslib",
+    "files": []
+  },
+  "node_modules/roslib/dist/RosLib.js -> ./NativeWebSocketTransport-CF_ebnyS.js": {
+    "id": "node_modules/roslib/dist/RosLib.js -> ./NativeWebSocketTransport-CF_ebnyS.js",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_roslib_dist_NativeWebSocketTransport-CF_ebnyS_js.js"
+    ]
+  },
+  "node_modules/roslib/dist/RosLib.js -> ./WsWebSocketTransport-6-v9C0gj.js": {
+    "id": "node_modules/roslib/dist/RosLib.js -> ./WsWebSocketTransport-6-v9C0gj.js",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_roslib_dist_WsWebSocketTransport-6-v9C0gj_js.js"
+    ]
+  },
+  "node_modules/roslib/dist/RosLib.js -> ws": {
+    "id": "node_modules/roslib/dist/RosLib.js -> ws",
+    "files": [
+      "static/chunks/_app-pages-browser_node_modules_ws_browser_js.js"
+    ]
+  }
+}
