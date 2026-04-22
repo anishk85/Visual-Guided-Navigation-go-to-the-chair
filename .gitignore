@@ -55,3 +55,8 @@ tramp
 *.un~
 Session.vim
 .netrwhist
+
+# Node
+node_modules/
+.next/
+npm-debug.log*
