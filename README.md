@@ -1,4 +1,4 @@
-# Vision-Language Navigation Robot
+# Vision-Language Navigation Robot:
 
 ![VLN Robot Control Demo](demo.gif)
 
